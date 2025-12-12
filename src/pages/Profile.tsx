@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserService } from '../services/UserService';
+// Importamos el tipo 'User' y 'UserUpdateDto' usando la palabra clave 'type'
+import { type User } from '../services/AuthService'; 
 import { type UserUpdateDto } from '../services/types/UserDto'; 
 import { useNavigate } from 'react-router-dom';
 
@@ -9,110 +11,144 @@ const Profile: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Estado para guardar el perfil completo obtenido por getUserById
+  const [profileData, setProfileData] = useState<User | null>(null);
   
-  const [username, setUsername] = useState(user?.username || '');
-  const [fullName, setFullName] = useState(user?.fullName || '');
+  // Estados para manejar los inputs de edición (solo username y fullName)
+  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   
-  const [loading, setLoading] = useState(false);
+  // Estados de la UI
+  const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  // ----------------------------------------------------
+  // EFECTO: Cargar el perfil completo al iniciar
+  // ----------------------------------------------------
   useEffect(() => {
+    const fetchProfile = async () => {
       if (user) {
-          setUsername(user.username);
+        try {
+          // Usa el ID del usuario logueado para obtener todos los detalles
+          const data = await UserService.getUserById(user.id);
+          setProfileData(data);
+          // Inicializar los inputs con los datos obtenidos
+          setUsername(data.username);
+          setFullName(data.fullName);
+        } catch (err) {
+          setError('Error al cargar la información detallada del perfil.');
+        } finally {
+          setLoading(false);
+        }
       }
+    };
+    fetchProfile();
   }, [user]);
 
-  if (!user) {
-    return <p>Cargando perfil...</p>;
+  // ----------------------------------------------------
+  // VERIFICACIÓN INICIAL (CORRECCIÓN del error 'null' ts(18047))
+  // ----------------------------------------------------
+  if (loading || !user || !profileData) { 
+    // Si cualquiera de estos es true, mostramos un mensaje de carga
+    return <p>Cargando información detallada del perfil...</p>;
   }
-
-
+  
+  // ----------------------------------------------------
+  // Lógica para ACTUALIZAR el perfil
+  // ----------------------------------------------------
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsUpdating(true);
     setMessage('');
     setError('');
 
-    
+    // Prepara el objeto DTO solo con los campos que cambiaron
     const updateData: UserUpdateDto = {};
-    if (username !== user.username) updateData.username = username;
-    if (fullName && (fullName !== user.fullName)) updateData.fullName = fullName;
+    if (username !== profileData.username) updateData.username = username;
+    if (fullName !== profileData.fullName) updateData.fullName = fullName;
     
     if (Object.keys(updateData).length === 0) {
-        setMessage("No hay cambios para guardar.");
-        setLoading(false);
+        setMessage("No se detectaron cambios.");
+        setIsUpdating(false);
         return;
     }
 
     try {
-        // Llama al servicio de actualización con solo los datos permitidos
         const updatedUser = await UserService.updateUser(user.id, updateData);
-        
-        // NOTA: Para ver el cambio, DEBERÍAS actualizar el AuthContext aquí
-        // (Esto requiere añadir una función de actualización al AuthProvider)
-
+        // Actualiza el estado local del perfil con la respuesta del servidor
+        setProfileData(updatedUser); 
         setMessage("Perfil actualizado con éxito.");
     } catch (err) {
         setError(`Fallo al actualizar: ${err instanceof Error ? err.message : 'Error desconocido'}`);
     } finally {
-        setLoading(false);
+        setIsUpdating(false);
     }
   };
 
-  
+  // ----------------------------------------------------
+  // Lógica para ELIMINAR la cuenta
+  // ----------------------------------------------------
   const handleDelete = async () => {
-      if (!window.confirm("¿Estás absolutamente seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.")) {
-          return;
-      }
+      if (!window.confirm("¿Estás seguro de que quieres eliminar tu cuenta?")) return;
       
       try {
           await UserService.deleteUser(user.id);
-          logout();
-          navigate('/login');
+          logout(); // Cierra la sesión
+          navigate('/login'); // Redirige al login
       } catch (err) {
           setError(`Fallo al eliminar: ${err instanceof Error ? err.message : 'Error desconocido'}`);
       }
   }
 
-  
+  // ----------------------------------------------------
+  // Renderizado
+  // ----------------------------------------------------
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc' }}>
-      <h2>Pestaña Perfil</h2>
-      <p>ID de Usuario (del Backend): <strong>{user.id}</strong></p>
-      <p>Email Registrado: <strong>{user.email}</strong></p>
+    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', border: '1px solid #007bff', borderRadius: '8px' }}>
+      <h2>Información de Perfil Detallada</h2>
       
+      {/* 1. Datos que solo se MUESTRAN (profileData ya es seguro que no es null) */}
+      <div style={{ marginBottom: '20px', border: '1px solid #eee', padding: '15px' }}>
+        <h3>Datos del Usuario</h3>
+        <p><strong>ID:</strong> {profileData.id}</p>
+        <p><strong>Email:</strong> {profileData.email}</p>
+        <p><strong>Estado del Usuario:</strong> {profileData.userStatus}</p>
+        <p><strong>Fecha de Nacimiento:</strong> {profileData.birthDate}</p>
+        <p><strong>Dirección:</strong> {profileData.address}</p>
+      </div>
+
       <hr />
 
-      <form onSubmit={handleUpdate}>
-        <h3>Actualizar Datos</h3>
+      {/* 2. Formulario de Actualización */}
+      <form onSubmit={handleUpdate} style={{ marginBottom: '20px' }}>
+        <h3>Editar Perfil (Solo Nombre y Usuario)</h3>
         
-        
-        <div>
-            <label htmlFor="username">Username:</label>
+        {/* Campo Username */}
+        <div style={{ marginBottom: '10px' }}>
+            <label>Username:</label>
             <input 
-                id="username"
                 type="text" 
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)} 
-                disabled={loading}
+                disabled={isUpdating}
             />
         </div>
         
-        
-        <div>
-            <label htmlFor="fullName">Nombre Completo:</label>
+        {/* Campo Full Name */}
+        <div style={{ marginBottom: '10px' }}>
+            <label>Nombre Completo:</label>
             <input 
-                id="fullName"
                 type="text" 
                 value={fullName} 
                 onChange={(e) => setFullName(e.target.value)} 
-                disabled={loading}
+                disabled={isUpdating}
             />
         </div>
 
-        <button type="submit" disabled={loading}>
-            {loading ? 'Guardando...' : 'Guardar Cambios'}
+        <button type="submit" disabled={isUpdating} style={{ backgroundColor: '#007bff', color: 'white' }}>
+            {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
         </button>
       </form>
       
@@ -121,11 +157,13 @@ const Profile: React.FC = () => {
       
       <hr />
       
-      
+      {/* 3. Botones de Acción */}
       <button onClick={handleDelete} style={{ marginRight: '10px', backgroundColor: 'red', color: 'white' }}>
         Eliminar Cuenta
       </button>
-      <button onClick={logout}>Cerrar Sesión</button>
+      <button onClick={logout} style={{ backgroundColor: 'orange', color: 'white' }}>
+        Cerrar Sesión
+      </button>
     </div>
   );
 };
