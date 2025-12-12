@@ -8,6 +8,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  fullName?: string;
   
 }
 
@@ -27,7 +28,7 @@ export const AuthService = {
 
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        
+
         throw new Error(error.response.data.message || 'Error de autenticación desconocido');
       }
       throw new Error('Error de conexión con el Users Service. Verifica que Render esté activo.');
