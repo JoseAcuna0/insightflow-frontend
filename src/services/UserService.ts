@@ -8,7 +8,6 @@ import { type UserUpdateDto } from './types/UserDto';
 
 // URL base de tu Backend (obtenida del .env, que ahora es la raíz /api)
 const USERS_API_URL = import.meta.env.VITE_USERS_API_URL; 
-const USER_BASE_PATH = '/users'; // Prefijo para todos los endpoints de Usuario
 
 export const UserService = {
     /**
@@ -18,7 +17,7 @@ export const UserService = {
      */
     async getUserById(userId: string): Promise<User> {
         // RUTA CORREGIDA: ${USERS_API_URL}/users/{userId}
-        const endpoint = `${USERS_API_URL}${USER_BASE_PATH}/${userId}`;
+        const endpoint = `${USERS_API_URL}/${userId}`;
         
         try {
             const response = await axios.get<User>(endpoint);
@@ -36,7 +35,7 @@ export const UserService = {
      */
     async updateUser(userId: string, updateData: UserUpdateDto): Promise<User> {
         // RUTA CORREGIDA: ${USERS_API_URL}/users/{userId}
-        const endpoint = `${USERS_API_URL}${USER_BASE_PATH}/${userId}`;
+        const endpoint = `${USERS_API_URL}/${userId}`;
         
         try {
             const response = await axios.patch<User>(endpoint, updateData); 
@@ -56,7 +55,7 @@ export const UserService = {
      */
     async deleteUser(userId: string): Promise<boolean> {
         // RUTA CORREGIDA: ${USERS_API_URL}/users/{userId}
-        const endpoint = `${USERS_API_URL}${USER_BASE_PATH}/${userId}`;
+        const endpoint = `${USERS_API_URL}/${userId}`;
         
         try {
             await axios.delete(endpoint);

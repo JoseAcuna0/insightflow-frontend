@@ -42,7 +42,7 @@ export const AuthService = {
    */
   async login(credentials: LoginRequest): Promise<User> {
     // RUTA CORREGIDA: ${USERS_API_URL}/auth/login
-    const loginEndpoint = `${USERS_API_URL}${AUTH_BASE_PATH}/login`; 
+    const loginEndpoint = `${USERS_API_URL}/login`; 
     
     try {
       const response = await axios.post<User>(
