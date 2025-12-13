@@ -6,8 +6,9 @@ import { type User } from './AuthService';
 // Asumimos que UserUpdateDto solo tiene username y fullName
 import { type UserUpdateDto } from './types/UserDto'; 
 
-// URL base de tu Backend (obtenida del .env)
+// URL base de tu Backend (obtenida del .env, que ahora es la raíz /api)
 const USERS_API_URL = import.meta.env.VITE_USERS_API_URL; 
+const USER_BASE_PATH = '/users'; // Prefijo para todos los endpoints de Usuario
 
 export const UserService = {
     /**
@@ -16,7 +17,8 @@ export const UserService = {
      * @returns El objeto User con todos los campos.
      */
     async getUserById(userId: string): Promise<User> {
-        const endpoint = `${USERS_API_URL}/${userId}`;
+        // RUTA CORREGIDA: ${USERS_API_URL}/users/{userId}
+        const endpoint = `${USERS_API_URL}${USER_BASE_PATH}/${userId}`;
         
         try {
             const response = await axios.get<User>(endpoint);
@@ -33,16 +35,14 @@ export const UserService = {
      * @returns El objeto User actualizado.
      */
     async updateUser(userId: string, updateData: UserUpdateDto): Promise<User> {
-        const endpoint = `${USERS_API_URL}/${userId}`;
+        // RUTA CORREGIDA: ${USERS_API_URL}/users/{userId}
+        const endpoint = `${USERS_API_URL}${USER_BASE_PATH}/${userId}`;
         
         try {
-            // *** CORRECCIÓN CRÍTICA: Cambiado de axios.put a axios.patch ***
             const response = await axios.patch<User>(endpoint, updateData); 
             return response.data;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
-                // Este error de validación ahora solo se verá si el Backend realmente lo envía, 
-                // una vez que el error 405 se resuelva.
                 throw new Error(error.response.data.message || 'Error de validación al actualizar.');
             }
             throw new Error('Fallo de conexión al actualizar el perfil.');
@@ -55,7 +55,8 @@ export const UserService = {
      * @returns true si la eliminación fue exitosa.
      */
     async deleteUser(userId: string): Promise<boolean> {
-        const endpoint = `${USERS_API_URL}/${userId}`;
+        // RUTA CORREGIDA: ${USERS_API_URL}/users/{userId}
+        const endpoint = `${USERS_API_URL}${USER_BASE_PATH}/${userId}`;
         
         try {
             await axios.delete(endpoint);
