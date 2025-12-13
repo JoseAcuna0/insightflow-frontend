@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login'; 
+import Tasks from './pages/Tasks';
 import Profile from './pages/Profile'; 
 import Dashboard from './pages/Dashboard'; // <<<--- 1. IMPORTAR EL DASHBOARD
 
@@ -17,8 +18,10 @@ const App: React.FC = () => {
     <Routes>
       {/* Rutas Públicas */}
       <Route path="/login" element={<Login />} />
+      <Route path="/tasks" element={<Tasks />} />
       
       {/* Rutas Protegidas (Requieren login) */}
+
       
       {/* 2. ESTABLECER DASHBOARD COMO RUTA PRINCIPAL PROTEGIDA (/) */}
       {/* Después del login exitoso, la navegación te lleva a / y carga Dashboard */}
