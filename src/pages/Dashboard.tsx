@@ -2,26 +2,35 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
 
+/**
+ * Componente Dashboard (Panel de Control).
+ * Representa la página principal a la que accede el usuario una vez autenticado.
+ * Muestra un menú de opciones disponibles (como Perfil o Cerrar Sesión).
+ */
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
-    // Obtenemos el usuario logueado Y la función de logout del contexto
+    
+    // Extrae el usuario actual y la función de logout del contexto global de autenticación
     const { user, logout } = useAuth(); 
 
+    // Verificación de seguridad (aunque PrivateRoute ya maneja esto, es una doble capa de seguridad)
     if (!user) {
-        // Redirige al login si el usuario no está autenticado
         navigate('/login');
         return null;
     }
 
-    // Función para manejar el cierre de sesión
+    /**
+     * Maneja el proceso de cierre de sesión.
+     * Ejecuta la limpieza del estado global y redirige al usuario a la pantalla de login.
+     */
     const handleLogout = () => {
-        // Llama a la función de logout proporcionada por el AuthContext
-        logout(); 
-        // Redirige al login después de cerrar sesión
-        navigate('/login'); 
+        logout(); // Limpia el usuario del contexto/localStorage
+        navigate('/login'); // Redirección inmediata
     };
 
-    // --- Definición de Botones del Dashboard ---
+    // --- Configuración de Botones del Menú ---
+    // Array de objetos que define las tarjetas de acción del dashboard.
+    // Facilita la escalabilidad: para añadir una opción, solo se agrega un objeto aquí.
     const buttons = [
         { 
             name: 'Ver Perfil', 
@@ -30,22 +39,25 @@ const Dashboard: React.FC = () => {
             disabled: false, 
             action: () => navigate('/profile') 
         },
-        // === BOTÓN DE CERRAR SESIÓN AGREGADO AL FINAL ===
+        // Opción de Cerrar Sesión (Configurada con estilo de alerta)
         { 
             name: 'Cerrar Sesión', 
             path: '/logout', 
             description: 'Termina tu sesión actual de forma segura.', 
             disabled: false, 
             action: handleLogout,
-            isLogout: true // Etiqueta para aplicar el estilo rojo
+            isLogout: true // Propiedad personalizada para aplicar estilos rojos (peligro/acción crítica)
         },
     ];
 
     return (
         <div style={{ maxWidth: '800px', margin: '50px auto', padding: '20px', textAlign: 'center', color: 'white' }}>
+            
+            {/* Cabecera de bienvenida personalizada */}
             <h2>Bienvenido, {user.username}!</h2>
             <p style={{ marginBottom: '40px' }}>Este es el centro de control del sistema. Selecciona una opción:</p>
             
+            {/* Contenedor Flex para las tarjetas del menú */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
                 {buttons.map((button) => (
                     <div 
@@ -55,7 +67,10 @@ const Dashboard: React.FC = () => {
                             padding: '15px', 
                             width: '200px',
                             cursor: button.disabled ? 'not-allowed' : 'pointer',
-                            // Estilo condicional: Rojo si es botón de cerrar sesión, Azul oscuro en caso contrario
+                            // Estilo condicional:
+                            // 1. Rojo (#dc3545) si es botón de logout.
+                            // 2. Gris oscuro (#404040) si está deshabilitado.
+                            // 3. Azul (#4a6597) por defecto.
                             backgroundColor: button.isLogout ? '#dc3545' : button.disabled ? '#404040' : '#4a6597', 
                             color: 'white', 
                             borderRadius: '8px',
@@ -63,11 +78,15 @@ const Dashboard: React.FC = () => {
                             transition: '0.3s',
                             textAlign: 'left',
                         }}
-                        // Ejecuta la acción definida en el array
+                        // Ejecuta la acción asociada solo si el botón no está deshabilitado
                         onClick={() => !button.disabled && button.action()}
                     >
-                        <h3 style={{ margin: '0 0 10px 0', color: button.disabled ? '#aaa' : '#fff' }}>{button.name}</h3>
-                        <p style={{ fontSize: '0.9em', color: button.disabled ? '#888' : '#ccc' }}>{button.description}</p>
+                        <h3 style={{ margin: '0 0 10px 0', color: button.disabled ? '#aaa' : '#fff' }}>
+                            {button.name}
+                        </h3>
+                        <p style={{ fontSize: '0.9em', color: button.disabled ? '#888' : '#ccc' }}>
+                            {button.description}
+                        </p>
                     </div>
                 ))}
             </div>
