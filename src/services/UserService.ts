@@ -10,59 +10,61 @@ import { type UserUpdateDto } from './types/UserDto';
 const USERS_API_URL = import.meta.env.VITE_USERS_API_URL; 
 
 export const UserService = {
-    /**
-     * 1. Obtiene toda la información detallada del perfil (incluye estado, dirección, etc.).
-     * @param userId El ID del usuario.
-     * @returns El objeto User con todos los campos.
-     */
-    async getUserById(userId: string): Promise<User> {
-        const endpoint = `${USERS_API_URL}/${userId}`;
-        
-        try {
-            const response = await axios.get<User>(endpoint);
-            return response.data;
-        } catch (error) {
-            throw new Error('Fallo al cargar el perfil. El Backend podría estar caído.');
-        }
-    },
-    
-    /**
-     * 2. Actualiza el perfil del usuario (limitado a Username y FullName).
-     * @param userId El ID del usuario a modificar.
-     * @param updateData Los campos a cambiar (username, fullName).
-     * @returns El objeto User actualizado.
-     */
-    async updateUser(userId: string, updateData: UserUpdateDto): Promise<User> {
-        const endpoint = `${USERS_API_URL}/${userId}`;
-        
-        try {
-            // Envía la petición PUT a /users/{userId}
-            const response = await axios.put<User>(endpoint, updateData); 
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error(error.response.data.message || 'Error de validación al actualizar.');
-            }
-            throw new Error('Fallo de conexión al actualizar el perfil.');
-        }
-    },
-    
-    /**
-     * 3. Elimina permanentemente la cuenta del usuario.
-     * @param userId El ID del usuario a eliminar.
-     * @returns true si la eliminación fue exitosa.
-     */
-    async deleteUser(userId: string): Promise<boolean> {
-        const endpoint = `${USERS_API_URL}/${userId}`;
-        
-        try {
-            await axios.delete(endpoint);
-            return true;
-        } catch (error) {
-             if (axios.isAxiosError(error) && error.response) {
-                throw new Error(error.response.data.message || 'Error al intentar eliminar la cuenta.');
-            }
-             throw new Error('Fallo de conexión al eliminar la cuenta.');
-        }
-    }
+    /**
+     * 1. Obtiene toda la información detallada del perfil (incluye estado, dirección, etc.).
+     * @param userId El ID del usuario.
+     * @returns El objeto User con todos los campos.
+     */
+    async getUserById(userId: string): Promise<User> {
+        const endpoint = `${USERS_API_URL}/${userId}`;
+        
+        try {
+            const response = await axios.get<User>(endpoint);
+            return response.data;
+        } catch (error) {
+            throw new Error('Fallo al cargar el perfil. El Backend podría estar caído.');
+        }
+    },
+    
+    /**
+     * 2. Actualiza el perfil del usuario (limitado a Username y FullName).
+     * @param userId El ID del usuario a modificar.
+     * @param updateData Los campos a cambiar (username, fullName).
+     * @returns El objeto User actualizado.
+     */
+    async updateUser(userId: string, updateData: UserUpdateDto): Promise<User> {
+        const endpoint = `${USERS_API_URL}/${userId}`;
+        
+        try {
+            // *** CORRECCIÓN CRÍTICA: Cambiado de axios.put a axios.patch ***
+            const response = await axios.patch<User>(endpoint, updateData); 
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                // Este error de validación ahora solo se verá si el Backend realmente lo envía, 
+                // una vez que el error 405 se resuelva.
+                throw new Error(error.response.data.message || 'Error de validación al actualizar.');
+            }
+            throw new Error('Fallo de conexión al actualizar el perfil.');
+        }
+    },
+    
+    /**
+     * 3. Elimina permanentemente la cuenta del usuario.
+     * @param userId El ID del usuario a eliminar.
+     * @returns true si la eliminación fue exitosa.
+     */
+    async deleteUser(userId: string): Promise<boolean> {
+        const endpoint = `${USERS_API_URL}/${userId}`;
+        
+        try {
+            await axios.delete(endpoint);
+            return true;
+        } catch (error) {
+             if (axios.isAxiosError(error) && error.response) {
+                throw new Error(error.response.data.message || 'Error al intentar eliminar la cuenta.');
+            }
+             throw new Error('Fallo de conexión al eliminar la cuenta.');
+        }
+    }
 };

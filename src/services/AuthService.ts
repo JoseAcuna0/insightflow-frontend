@@ -18,10 +18,8 @@ export interface User {
   username: string;
   email: string;
   fullName: string; 
-  
-  // Campos del perfil completo que obtendrás con UserService.getUserById
-  userStatus: string; 
-  birthDate: string;  
+  userStatus: boolean; 
+  dateOfBirth?: string | null;  
   address: string;    
 }
 
