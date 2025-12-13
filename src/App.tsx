@@ -1,10 +1,12 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login'; 
 import Profile from './pages/Profile'; 
+import Dashboard from './pages/Dashboard'; // <<<--- 1. IMPORTAR EL DASHBOARD
 
-// Wrapper para proteger rutas que requieren autenticación
-const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
+// Componente Wrapper para proteger rutas que requieren autenticación
+const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
   const { user } = useAuth();
   // Si no hay usuario, redirige al login
   return user ? element : <Navigate to="/login" replace />; 
@@ -13,12 +15,20 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
 const App: React.FC = () => {
   return (
     <Routes>
-      {/* Ruta para el Login (accesible a todos) */}
+      {/* Rutas Públicas */}
       <Route path="/login" element={<Login />} />
       
       {/* Rutas Protegidas (Requieren login) */}
-      <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
-      <Route path="/" element={<Navigate to="/profile" replace />} /> 
+      
+      {/* 2. ESTABLECER DASHBOARD COMO RUTA PRINCIPAL PROTEGIDA (/) */}
+      {/* Después del login exitoso, la navegación te lleva a / y carga Dashboard */}
+      <Route path="/" element={<PrivateRoute element={<Dashboard />} />} /> 
+
+      {/* La página de Perfil sigue estando disponible en /profile */}
+      <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
+
+      {/* 3. Ruta de Respaldo: Redirigir cualquier otra ruta no definida a la principal */}
+      <Route path="*" element={<Navigate to="/" replace />} /> 
     </Routes>
   );
 };
