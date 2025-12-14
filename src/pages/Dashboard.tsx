@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 /**
  * Componente Dashboard (Panel de Control).
  * Representa la página principal a la que accede el usuario una vez autenticado.
- * Muestra un menú de opciones disponibles (como Perfil o Cerrar Sesión).
+ * Muestra un menú de opciones disponibles (como Perfil, Documentos o Cerrar Sesión).
  */
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -38,6 +38,14 @@ const Dashboard: React.FC = () => {
             description: 'Visualiza y edita tu información personal.', 
             disabled: false, 
             action: () => navigate('/profile') 
+        },
+        { 
+            name: 'Documentos', 
+            path: '/documents', 
+            description: 'Gestiona tus documentos y notas.', 
+            disabled: false, 
+            action: () => navigate('/documents'),
+            icon: '📚'
         },
         // Opción de Cerrar Sesión (Configurada con estilo de alerta)
         { 
@@ -82,6 +90,7 @@ const Dashboard: React.FC = () => {
                         onClick={() => !button.disabled && button.action()}
                     >
                         <h3 style={{ margin: '0 0 10px 0', color: button.disabled ? '#aaa' : '#fff' }}>
+                            {button.icon && <span style={{ marginRight: '8px' }}>{button.icon}</span>}
                             {button.name}
                         </h3>
                         <p style={{ fontSize: '0.9em', color: button.disabled ? '#888' : '#ccc' }}>

@@ -4,6 +4,8 @@ import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import Documents from './pages/Documents';
+import DocumentEdit from './pages/DocumentEdit';
 
 /**
  * Componente de orden superior (Wrapper) para proteger rutas que requieren autenticación.
@@ -37,6 +39,10 @@ const App: React.FC = () => {
 
       {/* Ruta de perfil: Muestra la información del usuario */}
       <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
+
+      {/* Rutas de documentos */}
+      <Route path="/documents" element={<PrivateRoute element={<Documents />} />} />
+      <Route path="/documents/:id" element={<PrivateRoute element={<DocumentEdit />} />} />
 
       {/* --- Ruta de Respaldo (Fallback) --- */}
       {/* Captura cualquier ruta no definida y redirige a la ruta principal */}
