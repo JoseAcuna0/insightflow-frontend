@@ -1,11 +1,14 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import Login from './pages/Login';
-import Profile from './pages/Profile';
-import Dashboard from './pages/Dashboard';
+
+import Login from './pages/Login'; 
+import Tasks from './pages/Tasks';
+import Profile from './pages/Profile'; 
+import Dashboard from './pages/Dashboard'; 
 import Documents from './pages/Documents';
 import DocumentEdit from './pages/DocumentEdit';
+
 
 /**
  * Componente de orden superior (Wrapper) para proteger rutas que requieren autenticación.
@@ -31,8 +34,8 @@ const App: React.FC = () => {
     <Routes>
       {/* --- Rutas Públicas --- */}
       <Route path="/login" element={<Login />} />
-
       {/* --- Rutas Protegidas (Requieren autenticación previa) --- */}
+      <Route path="/" element={<PrivateRoute element={<Tasks />} />} />
 
       {/* Ruta raíz: Carga el Dashboard si el usuario está autenticado */}
       <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
