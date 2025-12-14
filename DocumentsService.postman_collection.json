@@ -1,0 +1,139 @@
+{
+	"info": {
+		"_postman_id": "3ad34586-4b39-48ea-b8f0-af40c7f90aa9",
+		"name": "DocumentsService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34959440"
+	},
+	"item": [
+		{
+			"name": "updateDocument",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"Título Actualizado\",\r\n  \"icon\": \"📝\",\r\n  \"content\": \"{'asdasd' : 'asdasda'}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/Documents/{id}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"Documents",
+						"{id}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CreateDocument",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"workspaceId\": \"string\",\r\n  \"title\": \"string\",\r\n  \"icon\": \"string\",\r\n  \"content\": \"{}\",\r\n  \"createdByUserId\": \"string\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/Documents",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"Documents"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllDocuments",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/Documents",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"Documents"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getDocumentById",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"workspaceId\": \"string\",\r\n  \"title\": \"string\",\r\n  \"icon\": \"string\",\r\n  \"content\": \"{}\",\r\n  \"createdByUserId\": \"string\"\r\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/Documents/{id}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"Documents",
+						"{id}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteDocument",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"workspaceId\": \"string\",\r\n  \"title\": \"string\",\r\n  \"icon\": \"string\",\r\n  \"content\": \"{}\",\r\n  \"createdByUserId\": \"string\"\r\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/Documents/{id}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"Documents",
+						"{id}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://taller-arqui-documents-service.onrender.com",
+			"type": "default"
+		}
+	]
+}
