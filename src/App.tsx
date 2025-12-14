@@ -34,8 +34,9 @@ const App: React.FC = () => {
     <Routes>
       {/* --- Rutas Públicas --- */}
       <Route path="/login" element={<Login />} />
-      {/* --- Rutas Protegidas (Requieren autenticación previa) --- */}
-      <Route path="/" element={<PrivateRoute element={<Tasks />} />} />
+      
+      {/* Rutas Protegidas (Requieren login) */}
+      <Route path="/tasks" element={<PrivateRoute element={<Tasks />} />} />
 
       {/* Ruta raíz: Carga el Dashboard si el usuario está autenticado */}
       <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
