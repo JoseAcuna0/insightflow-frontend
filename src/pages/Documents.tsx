@@ -5,13 +5,15 @@ import { DocumentService, type Document } from '../services/DocumentService';
 
 /**
  * Componente de Lista de Documentos
- * Muestra todos los documentos y permite crear, editar y eliminar
+ * Muestra documentos del usuario filtrados por workspace
  */
 const Documents: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [allDocuments, setAllDocuments] = useState<Document[]>([]); // Todos los docs del usuario
+  const [deletedDocuments, setDeletedDocuments] = useState<Document[]>([]); // Docs eliminados
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -21,6 +23,13 @@ const Documents: React.FC = () => {
   const [newIcon, setNewIcon] = useState('📄');
   const [newWorkspace, setNewWorkspace] = useState('workspace-example-1');
 
+  // Estado para filtro de workspace
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>('all');
+  const [availableWorkspaces, setAvailableWorkspaces] = useState<string[]>([]);
+
+  // Estado para vista de papelera
+  const [showTrash, setShowTrash] = useState(false);
+
   /**
    * Carga los documentos al montar el componente
    */
@@ -29,18 +38,88 @@ const Documents: React.FC = () => {
   }, []);
 
   /**
-   * Obtiene todos los documentos del servidor
+   * Obtiene todos los documentos del servidor, filtra por usuario y extrae workspaces
    */
   const loadDocuments = async () => {
+    if (!user) {
+      setError('Usuario no autenticado');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const data = await DocumentService.getAllDocuments();
-      setDocuments(data);
+      
+      // Separar documentos activos y eliminados del usuario actual
+      const userActiveDocuments = data.filter(
+        doc => doc.isActive === true && doc.createdByUserId === user.id
+      );
+
+      const userDeletedDocuments = data.filter(
+        doc => doc.isActive === false && doc.createdByUserId === user.id
+      );
+      
+      // Extraer workspaces únicos de documentos activos
+      const workspaces = Array.from(
+        new Set(userActiveDocuments.map(doc => doc.workspaceId))
+      ).sort();
+      
+      setAllDocuments(userActiveDocuments);
+      setDeletedDocuments(userDeletedDocuments);
+      setAvailableWorkspaces(workspaces);
+      
+      // Aplicar filtro de workspace solo si no estamos en papelera
+      if (!showTrash) {
+        filterByWorkspace(userActiveDocuments, selectedWorkspace);
+      }
+      
       setError('');
+      
+      console.log(`📊 Total documentos: ${data.length}`);
+      console.log(`👤 Documentos activos del usuario: ${userActiveDocuments.length}`);
+      console.log(`🗑️ Documentos eliminados del usuario: ${userDeletedDocuments.length}`);
+      console.log(`📁 Workspaces disponibles:`, workspaces);
     } catch (err) {
       setError('Error al cargar los documentos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Filtra documentos por workspace seleccionado
+   */
+  const filterByWorkspace = (docs: Document[], workspace: string) => {
+    if (workspace === 'all') {
+      setDocuments(docs);
+    } else {
+      const filtered = docs.filter(doc => doc.workspaceId === workspace);
+      setDocuments(filtered);
+    }
+  };
+
+  /**
+   * Maneja el cambio de workspace seleccionado
+   */
+  const handleWorkspaceChange = (workspace: string) => {
+    setSelectedWorkspace(workspace);
+    filterByWorkspace(allDocuments, workspace);
+  };
+
+  /**
+   * Cambia entre vista normal y papelera
+   */
+  const toggleTrashView = () => {
+    const newShowTrash = !showTrash;
+    setShowTrash(newShowTrash);
+    
+    if (newShowTrash) {
+      // Mostrar documentos eliminados
+      setDocuments(deletedDocuments);
+    } else {
+      // Volver a documentos activos con filtro de workspace
+      filterByWorkspace(allDocuments, selectedWorkspace);
     }
   };
 
@@ -133,20 +212,35 @@ const Documents: React.FC = () => {
       
       {/* Cabecera */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h2>📚 Mis Documentos</h2>
+        <h2>{showTrash ? '🗑️ Papelera de Reciclaje' : '📚 Mis Documentos'}</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
+          {!showTrash && (
+            <button
+              onClick={() => setShowCreateForm(!showCreateForm)}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: showCreateForm ? '#6c757d' : '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+              }}
+            >
+              {showCreateForm ? 'Cancelar' : '➕ Nuevo Documento'}
+            </button>
+          )}
           <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
+            onClick={toggleTrashView}
             style={{
               padding: '10px 20px',
-              backgroundColor: '#28a745',
+              backgroundColor: showTrash ? '#007bff' : '#dc3545',
               color: 'white',
               border: 'none',
               borderRadius: '5px',
               cursor: 'pointer',
             }}
           >
-            {showCreateForm ? 'Cancelar' : '➕ Nuevo Documento'}
+            {showTrash ? '📚 Ver Documentos' : `🗑️ Papelera (${deletedDocuments.length})`}
           </button>
           <button
             onClick={() => navigate('/')}
@@ -180,8 +274,97 @@ const Documents: React.FC = () => {
         </div>
       )}
 
-      {/* Formulario de crear documento */}
-      {showCreateForm && (
+      {/* Mensaje informativo */}
+      {!loading && !showTrash && documents.length > 0 && (
+        <div
+          style={{
+            padding: '12px 15px',
+            backgroundColor: 'rgba(23, 162, 184, 0.15)',
+            border: '1px solid rgba(23, 162, 184, 0.3)',
+            borderRadius: '5px',
+            marginBottom: '20px',
+            color: '#17a2b8',
+            fontSize: '0.9em',
+          }}
+        >
+          ℹ️ Mostrando {documents.length} documento{documents.length !== 1 ? 's' : ''} 
+          {selectedWorkspace !== 'all' && ` en ${selectedWorkspace}`}
+        </div>
+      )}
+
+      {/* Mensaje informativo de papelera */}
+      {!loading && showTrash && (
+        <div
+          style={{
+            padding: '12px 15px',
+            backgroundColor: 'rgba(220, 53, 69, 0.15)',
+            border: '1px solid rgba(220, 53, 69, 0.3)',
+            borderRadius: '5px',
+            marginBottom: '20px',
+            color: '#ff6b6b',
+            fontSize: '0.9em',
+          }}
+        >
+          🗑️ Papelera: {deletedDocuments.length} documento{deletedDocuments.length !== 1 ? 's' : ''} eliminado{deletedDocuments.length !== 1 ? 's' : ''}
+          {deletedDocuments.length > 0 && ' (Los documentos en la papelera no se pueden recuperar)'}
+        </div>
+      )}
+
+      {/* Filtro por Workspace - Solo en vista normal */}
+      {!loading && !showTrash && availableWorkspaces.length > 0 && (
+        <div
+          style={{
+            padding: '20px',
+            backgroundColor: '#333',
+            border: '1px solid #444',
+            borderRadius: '8px',
+            marginBottom: '20px',
+          }}
+        >
+          <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+            📁 Filtrar por Workspace:
+          </label>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => handleWorkspaceChange('all')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: selectedWorkspace === 'all' ? '#007bff' : '#555',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: selectedWorkspace === 'all' ? 'bold' : 'normal',
+              }}
+            >
+              🌐 Todos ({allDocuments.length})
+            </button>
+            {availableWorkspaces.map((workspace) => {
+              const count = allDocuments.filter(doc => doc.workspaceId === workspace).length;
+              return (
+                <button
+                  key={workspace}
+                  onClick={() => handleWorkspaceChange(workspace)}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: selectedWorkspace === workspace ? '#007bff' : '#555',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontWeight: selectedWorkspace === workspace ? 'bold' : 'normal',
+                  }}
+                >
+                  📂 {workspace} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Formulario de crear documento - Solo en vista normal */}
+      {!showTrash && showCreateForm && (
         <form
           onSubmit={handleCreate}
           style={{
@@ -268,8 +451,15 @@ const Documents: React.FC = () => {
 
       {/* Lista de documentos */}
       {documents.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#888' }}>
-          No hay documentos. ¡Crea tu primer documento!
+        <p style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
+          {showTrash 
+            ? (deletedDocuments.length === 0 
+                ? '🎉 No hay documentos en la papelera' 
+                : 'No hay documentos eliminados')
+            : (allDocuments.length === 0 
+                ? 'No tienes documentos. ¡Crea tu primer documento!' 
+                : `No hay documentos en ${selectedWorkspace === 'all' ? 'ningún workspace' : selectedWorkspace}`)
+          }
         </p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
@@ -301,34 +491,55 @@ const Documents: React.FC = () => {
               </p>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                <button
-                  onClick={() => handleEdit(doc.id)}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  ✏️ Editar
-                </button>
-                <button
-                  onClick={() => handleDelete(doc.id, doc.title)}
-                  style={{
-                    flex: 1,
-                    padding: '8px',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  🗑️ Eliminar
-                </button>
+                {showTrash ? (
+                  // Vista de papelera - solo botón de ver
+                  <button
+                    onClick={() => handleEdit(doc.id)}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    👁️ Ver
+                  </button>
+                ) : (
+                  // Vista normal - botones de editar y eliminar
+                  <>
+                    <button
+                      onClick={() => handleEdit(doc.id)}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ✏️ Editar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(doc.id, doc.title)}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        backgroundColor: '#dc3545',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      🗑️ Eliminar
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
