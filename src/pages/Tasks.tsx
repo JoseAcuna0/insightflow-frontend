@@ -30,17 +30,27 @@ const Tasks: React.FC = () => {
 
   // Modal para crear tarea
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createModalError, setCreateModalError] = useState<string | null>(null);
   
   // Modal para ver/editar tarea seleccionada
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailModalError, setDetailModalError] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskDto | null>(null);
   
+  // Usuarios fijos para asignar tareas
+  const USERS = [
+    { id: '3fa85f64-5717-4562-b3fc-2c963f66afa4', name: 'usuario1' },
+    { id: '3fa85f64-5717-4562-b3fc-2c963f66afa5', name: 'usuario2' },
+    { id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', name: 'usuario3' },
+  ];
+
   // Estado para crear tarea
   const [createFormData, setCreateFormData] = useState({
     title: '',
     description: '',
     comment: '',
-    dueDate: ''
+    dueDate: '',
+    assignedTo: '3fa85f64-5717-4562-b3fc-2c963f66afa4'
   });
   
   // Estado para editar tarea seleccionada
@@ -49,10 +59,11 @@ const Tasks: React.FC = () => {
     description: '',
     comment: '',
     status: '',
-    dueDate: ''
+    dueDate: '',
+    assignedTo: '3fa85f64-5717-4562-b3fc-2c963f66afa4'
   });
 
-  // TODO: Cambiar esto por user.id cuando se integre la autenticación
+  // Cambiar esto por user.id cuando se integre la autenticación
   const currentUserId = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 
   // Estado para drag and drop
@@ -93,10 +104,10 @@ const Tasks: React.FC = () => {
   // Crear una nueva tarea
   const handleCreateTask = async () => {
     if (!documentId || !createFormData.title || !createFormData.dueDate) {
-      setError('Completa todos los campos obligatorios (título y fecha)');
+      setCreateModalError('Completa todos los campos obligatorios (título y fecha)');
       return;
     }
-    clearMessages();
+    setCreateModalError(null);
     setLoading(true);
     try {
       await TaskService.createTask({
@@ -105,15 +116,16 @@ const Tasks: React.FC = () => {
         description: createFormData.description,
         comment: createFormData.comment,
         status: 'pending',
-        assignedTo: currentUserId,
+        assignedTo: createFormData.assignedTo,
         dueDate: new Date(createFormData.dueDate).toISOString()
       });
       setSuccessMsg('Tarea creada correctamente');
-      setCreateFormData({ title: '', description: '', comment: '', dueDate: '' });
+      setCreateFormData({ title: '', description: '', comment: '', dueDate: '', assignedTo: '3fa85f64-5717-4562-b3fc-2c963f66afa4' });
+      setCreateModalError(null);
       setShowCreateModal(false);
       handleGetTasks();
     } catch (err: any) {
-      setError(err.message);
+      setCreateModalError(err.message);
     } finally {
       setLoading(false);
     }
@@ -122,10 +134,10 @@ const Tasks: React.FC = () => {
   // Actualizar tarea seleccionada
   const handleUpdateSelectedTask = async () => {
     if (!selectedTask?.id || !editFormData.title || !editFormData.dueDate) {
-      setError('Completa todos los campos obligatorios (título y fecha)');
+      setDetailModalError('Completa todos los campos obligatorios (título y fecha)');
       return;
     }
-    clearMessages();
+    setDetailModalError(null);
     setLoading(true);
     try {
       await TaskService.updateTask({
@@ -134,15 +146,16 @@ const Tasks: React.FC = () => {
         description: editFormData.description,
         comment: editFormData.comment,
         status: selectedTask.status || 'pending',
-        assignedTo: currentUserId,
+        assignedTo: editFormData.assignedTo,
         dueDate: new Date(editFormData.dueDate).toISOString()
       });
       setSuccessMsg('Tarea actualizada correctamente');
+      setDetailModalError(null);
       setShowDetailModal(false);
       setSelectedTask(null);
       handleGetTasks();
     } catch (err: any) {
-      setError(err.message);
+      setDetailModalError(err.message);
     } finally {
       setLoading(false);
     }
@@ -151,10 +164,10 @@ const Tasks: React.FC = () => {
   // Eliminar tarea seleccionada desde el modal de detalle
   const handleDeleteSelectedTask = async () => {
     if (!selectedTask?.id) {
-      setError('No hay tarea seleccionada');
+      setDetailModalError('No hay tarea seleccionada');
       return;
     }
-    clearMessages();
+    setDetailModalError(null);
     setLoading(true);
     setShowDetailModal(false);
     try {
@@ -173,7 +186,8 @@ const Tasks: React.FC = () => {
 
   // Abrir modal para crear tarea
   const handleOpenCreateModal = () => {
-    setCreateFormData({ title: '', description: '', comment: '', dueDate: '' });
+    setCreateFormData({ title: '', description: '', comment: '', dueDate: '', assignedTo: '3fa85f64-5717-4562-b3fc-2c963f66afa4' });
+    setCreateModalError(null);
     setShowCreateModal(true);
     clearMessages();
   };
@@ -181,7 +195,8 @@ const Tasks: React.FC = () => {
   // Cerrar modal de crear
   const handleCloseCreateModal = () => {
     setShowCreateModal(false);
-    setCreateFormData({ title: '', description: '', comment: '', dueDate: '' });
+    setCreateFormData({ title: '', description: '', comment: '', dueDate: '', assignedTo: '3fa85f64-5717-4562-b3fc-2c963f66afa4' });
+    setCreateModalError(null);
     clearMessages();
   };
 
@@ -193,8 +208,10 @@ const Tasks: React.FC = () => {
       description: task.description || '',
       comment: task.comment || '',
       status: task.status || '',
-      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : ''
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : '',
+      assignedTo: task.assignedTo || '3fa85f64-5717-4562-b3fc-2c963f66afa4'
     });
+    setDetailModalError(null);
     setShowDetailModal(true);
     clearMessages();
   };
@@ -203,6 +220,7 @@ const Tasks: React.FC = () => {
   const handleCloseDetailModal = () => {
     setShowDetailModal(false);
     setSelectedTask(null);
+    setDetailModalError(null);
     clearMessages();
   };
 
@@ -275,15 +293,27 @@ const Tasks: React.FC = () => {
     }
   };
 
-  // Agrupar tareas por estado
+  // Agrupar tareas por estado y ordenar por fecha de vencimiento
   const tasksByStatus = {
-    pending: tasks.filter(t => t.status === 'pending'),
-    'in-progress': tasks.filter(t => t.status === 'in-progress'),
-    completed: tasks.filter(t => t.status === 'completed')
+    pending: tasks.filter(t => t.status === 'pending').sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    }),
+    'in-progress': tasks.filter(t => t.status === 'in-progress').sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    }),
+    completed: tasks.filter(t => t.status === 'completed').sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    })
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#242424', color: 'white' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#242424', color: 'white', overflowX: 'hidden' }}>
       {/* Navbar */}
       <nav style={{
         backgroundColor: '#1a1a1a',
@@ -338,7 +368,7 @@ const Tasks: React.FC = () => {
       </nav>
 
       {/* Contenido principal */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '30px 20px' }}>
+      <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '30px 20px 30px 20px' }}>
         {/* Header con botón crear */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <h2 style={{ margin: 0 }}>Gestión de Tareas</h2>
@@ -387,17 +417,13 @@ const Tasks: React.FC = () => {
         )}
 
         {/* Tablero Kanban */}
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <p>Cargando tareas...</p>
-          </div>
-        )}
-        
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '20px',
-          minHeight: '500px'
+          height: 'calc(100vh - 280px)',
+          minHeight: '400px',
+          maxHeight: '800px'
         }}>
           {/* Columna Pendiente */}
             <div
@@ -409,8 +435,12 @@ const Tasks: React.FC = () => {
                 border: dragOverColumn === 'pending' ? '2px dashed #ffc107' : '2px solid #ffc107',
                 borderRadius: '12px',
                 padding: '15px',
-                minHeight: '500px',
-                transition: 'all 0.3s ease'
+                height: '100%',
+                maxHeight: '100%',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
               }}
             >
               <h3 style={{
@@ -420,11 +450,12 @@ const Tasks: React.FC = () => {
                 color: '#000',
                 borderRadius: '8px',
                 textAlign: 'center',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                flexShrink: 0
               }}>
                 📝 Pendiente ({tasksByStatus.pending.length})
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', overflowY: 'auto', overflowX: 'hidden', flex: 1 }}>
                 {tasksByStatus.pending.length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#666', padding: '20px', fontSize: '14px' }}>
                     No hay tareas pendientes
@@ -481,6 +512,9 @@ const Tasks: React.FC = () => {
                     <p style={{ margin: '5px 0', fontSize: '12px', color: '#999' }}>
                       📅 {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Sin fecha'}
                     </p>
+                    <p style={{ margin: '5px 0', fontSize: '12px', color: '#999' }}>
+                      👤 Asignado a: {USERS.find(u => u.id === task.assignedTo)?.name || 'Sin asignar'}
+                    </p>
                   </div>
                   ))
                 )}
@@ -497,8 +531,12 @@ const Tasks: React.FC = () => {
                 border: dragOverColumn === 'in-progress' ? '2px dashed #646cff' : '2px solid #646cff',
                 borderRadius: '12px',
                 padding: '15px',
-                minHeight: '500px',
-                transition: 'all 0.3s ease'
+                height: '100%',
+                maxHeight: '100%',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
               }}
             >
               <h3 style={{
@@ -508,11 +546,12 @@ const Tasks: React.FC = () => {
                 color: 'white',
                 borderRadius: '8px',
                 textAlign: 'center',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                flexShrink: 0
               }}>
                 ⚙️ En Progreso ({tasksByStatus['in-progress'].length})
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', overflowY: 'auto', overflowX: 'hidden', flex: 1 }}>
                 {tasksByStatus['in-progress'].length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#666', padding: '20px', fontSize: '14px' }}>
                     No hay tareas en progreso
@@ -569,6 +608,9 @@ const Tasks: React.FC = () => {
                     <p style={{ margin: '5px 0', fontSize: '12px', color: '#999' }}>
                       📅 {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Sin fecha'}
                     </p>
+                    <p style={{ margin: '5px 0', fontSize: '12px', color: '#999' }}>
+                      👤 Asignado a: {USERS.find(u => u.id === task.assignedTo)?.name || 'Sin asignar'}
+                    </p>
                   </div>
                   ))
                 )}
@@ -585,8 +627,12 @@ const Tasks: React.FC = () => {
                 border: dragOverColumn === 'completed' ? '2px dashed #28a745' : '2px solid #28a745',
                 borderRadius: '12px',
                 padding: '15px',
-                minHeight: '500px',
-                transition: 'all 0.3s ease'
+                height: '100%',
+                maxHeight: '100%',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
               }}
             >
               <h3 style={{
@@ -596,11 +642,12 @@ const Tasks: React.FC = () => {
                 color: 'white',
                 borderRadius: '8px',
                 textAlign: 'center',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                flexShrink: 0
               }}>
                 ✅ Completada ({tasksByStatus.completed.length})
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', overflowY: 'auto', overflowX: 'hidden', flex: 1 }}>
                 {tasksByStatus.completed.length === 0 ? (
                   <p style={{ textAlign: 'center', color: '#666', padding: '20px', fontSize: '14px' }}>
                     No hay tareas completadas
@@ -657,6 +704,9 @@ const Tasks: React.FC = () => {
                     <p style={{ margin: '5px 0', fontSize: '12px', color: '#999' }}>
                       📅 {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Sin fecha'}
                     </p>
+                    <p style={{ margin: '5px 0', fontSize: '12px', color: '#999' }}>
+                      👤 Asignado a: {USERS.find(u => u.id === task.assignedTo)?.name || 'Sin asignar'}
+                    </p>
                   </div>
                   ))
                 )}
@@ -690,6 +740,19 @@ const Tasks: React.FC = () => {
             overflowY: 'auto'
           }}>
             <h2 style={{ margin: '0 0 20px 0', color: '#646cff' }}>Nueva Tarea</h2>
+
+            {createModalError && (
+              <div style={{
+                background: '#dc3545',
+                padding: '12px',
+                marginBottom: '15px',
+                borderRadius: '6px',
+                border: '1px solid #c82333',
+                fontSize: '14px'
+              }}>
+                {createModalError}
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
@@ -770,6 +833,27 @@ const Tasks: React.FC = () => {
                   }}
                 />
               </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>Asignar a:</label>
+                <select
+                  value={createFormData.assignedTo}
+                  onChange={(e) => setCreateFormData({ ...createFormData, assignedTo: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #444',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px'
+                  }}
+                >
+                  {USERS.map(user => (
+                    <option key={user.id} value={user.id}>{user.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '25px' }}>
@@ -839,6 +923,19 @@ const Tasks: React.FC = () => {
             overflowY: 'auto'
           }}>
             <h2 style={{ margin: '0 0 20px 0', color: '#646cff' }}>Detalle de Tarea</h2>
+
+            {detailModalError && (
+              <div style={{
+                background: '#dc3545',
+                padding: '12px',
+                marginBottom: '15px',
+                borderRadius: '6px',
+                border: '1px solid #c82333',
+                fontSize: '14px'
+              }}>
+                {detailModalError}
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div>
@@ -918,6 +1015,27 @@ const Tasks: React.FC = () => {
                     fontSize: '14px'
                   }}
                 />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>Asignar a:</label>
+                <select
+                  value={editFormData.assignedTo}
+                  onChange={(e) => setEditFormData({ ...editFormData, assignedTo: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #444',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '14px'
+                  }}
+                >
+                  {USERS.map(user => (
+                    <option key={user.id} value={user.id}>{user.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
