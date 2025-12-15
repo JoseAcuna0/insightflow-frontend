@@ -1,0 +1,145 @@
+{
+	"info": {
+		"_postman_id": "bb0315a0-ea2c-4a7a-9152-1bd0ca90c647",
+		"name": "Taller3ADS_insightflow_taskservice",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34959431"
+	},
+	"item": [
+		{
+			"name": "crearTarea",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"documentId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\r\n  \"title\": \"string\",\r\n  \"status\": \"string\",\r\n  \"assignedTo\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\r\n  \"dueDate\": \"2025-12-13T20:42:24.806Z\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://insightflow-taskservice.onrender.com/tasks",
+					"protocol": "https",
+					"host": [
+						"insightflow-taskservice",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "verTareasDocumento",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://insightflow-taskservice.onrender.com/documents/3fa85f64-5717-4562-b3fc-2c963f66afa6/tasks",
+					"protocol": "https",
+					"host": [
+						"insightflow-taskservice",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"documents",
+						"3fa85f64-5717-4562-b3fc-2c963f66afa6",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "verTarea",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://insightflow-taskservice.onrender.com/tasks/1e68ce8f-f1f8-42e9-bbf1-ba91600cd8db",
+					"protocol": "https",
+					"host": [
+						"insightflow-taskservice",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"tasks",
+						"1e68ce8f-f1f8-42e9-bbf1-ba91600cd8db"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"string\",\r\n  \"description\": \"string\",\r\n  \"comment\": \"string\",\r\n  \"status\": \"string\",\r\n  \"assignedTo\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\r\n  \"dueDate\": \"2025-12-15T01:45:00.671Z\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://insightflow-taskservice.onrender.com/tasks/1e68ce8f-f1f8-42e9-bbf1-ba91600cd8db",
+					"protocol": "https",
+					"host": [
+						"insightflow-taskservice",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"tasks",
+						"1e68ce8f-f1f8-42e9-bbf1-ba91600cd8db"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://insightflow-taskservice.onrender.com/tasks/1e68ce8f-f1f8-42e9-bbf1-ba91600cd8db",
+					"protocol": "https",
+					"host": [
+						"insightflow-taskservice",
+						"onrender",
+						"com"
+					],
+					"path": [
+						"tasks",
+						"1e68ce8f-f1f8-42e9-bbf1-ba91600cd8db"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
