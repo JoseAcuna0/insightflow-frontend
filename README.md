@@ -1,73 +1,175 @@
-# React + TypeScript + Vite
+# InsightFlow Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📋 Descripción
 
-Currently, two official plugins are available:
+InsightFlow Frontend es una aplicación web construida con React y TypeScript que proporciona una interfaz de usuario moderna para gestionar espacios de trabajo documentos, tareas y usuarios. El proyecto implementa una arquitectura de microservicios comunicándose con múltiples backends especializados.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🏗️ Arquitectura
 
-## React Compiler
+### Arquitectura de Microservicios
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+El frontend se comunica con tres servicios backend independientes:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+    ┌──────────────────────────────────────┐
+    │     InsightFlow Frontend (React)     │
+    │         Desplegado en firebase       │
+    └────────────────────┬─────────────────┘
+                         │
+     ┌───────────────────│─────────────────┐
+     │                   │                 │
+     ▼                   ▼                 ▼
+┌─────────┐      ┌────────────┐      ┌────────────┐
+│  User   │      │  Document  │      │    Task    │
+│ Service │      │   Service  │      │   Service  │
+│(Render) │      │  (Render)  │      │  (Render)  │
+└─────────┘      └────────────┘      └────────────┘
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🎨 Patrones de Diseño
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. **Service Layer Pattern**
+Cada servicio backend tiene su propia capa de servicio encapsulada:
+
+```typescript
+// Ejemplo: AuthService.ts
+export const AuthService = {
+  async login(credentials: LoginRequest): Promise<User> {
+    const response = await axios.post(`${API_URL}/login`, credentials);
+    return response.data;
+  }
+};
 ```
+
+**Beneficios:**
+- Separación de lógica de negocio de la UI
+- Fácil mantenimiento y testing
+- Reutilización de código
+
+### 2. **Context API Pattern**
+Gestión del estado global de autenticación:
+
+```typescript
+// AuthContext.tsx
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  
+  const login = async (identifier: string, password: string) => {
+    const loggedInUser = await AuthService.login({ identifier, password });
+    setUser(loggedInUser);
+  };
+  
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+```
+
+**Beneficios:**
+- Estado compartido sin prop drilling
+- Single source of truth para autenticación
+- Simplifica la gestión de sesión
+
+
+
+## 🔌 Endpoints Disponibles
+
+### **AuthService**
+- `POST /api/users/login`
+
+### **UserService**
+- `GET /api/users/{userId}`
+- `PATCH /api/users/{userId}`
+- `DELETE /api/users/{userId}`
+
+### **TaskService**
+- `GET /documents/{documentId}/tasks`
+- `GET /tasks/{taskId}`
+- `POST /tasks`
+- `PATCH /tasks/{taskId}`
+- `DELETE /tasks/{taskId}`
+
+
+### **DocumentService**
+- `POST/documents`
+- `GET /documents/{id}`
+- `PATCH /documents/{id}`
+- `DELETE /documents/{id}`
+
+---
+
+## 🚀 Cómo Ejecutar el Proyecto
+
+### Prerrequisitos
+
+- **Node.js** >= 22.0.0
+- **npm** >= 9.0.0
+- **Git**
+
+### Paso 1: Clonar el Repositorio
+
+```bash
+git clone https://github.com/JoseAcuna0/insightflow-frontend.git
+cd insightflow-frontend
+```
+
+### Paso 2: Instalar Dependencias
+
+```bash
+npm install
+```
+
+### Paso 3: Configurar Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto, los valores que debe ir en el env se pueden encontrar en el package.json:
+
+```bash
+# .env
+VITE_USERS_API_URL=users-service-page
+VITE_DOCUMENTS_API_URL=documents-service-page
+VITE_TASKS_API_URL=tasks-service-page
+```
+
+
+### Paso 4: Probar en Modo de Desarrollo o Local
+
+```bash
+npm run dev
+```
+
+El proyecto estará disponible en: **http://localhost:5173**
+
+### Paso 5: Probar Sistema Desplegado
+
+Simplemente debemos dirirnos a la pagina https://taller3-frontend-a6b6a.web.app/login
+
+Nota: si no la has iniciado antes, o durante un tiempo, al abrirla puede demorar un poco 
+mas de lo normal, una vez cargada funcionara con normalidad
+
+## 📦 Tecnologías Utilizadas
+
+| Tecnología | Propósito |
+|-----------|-----------|
+| **React 19** | Librería de UI |
+| **TypeScript** | Tipado estático |
+| **Vite** | Build tool y dev server |
+| **React Router DOM** | Navegación SPA |
+| **Axios** | Cliente HTTP |
+| **ESLint** | Linter de código |
+
+---
+
+## 🗂️ Rutas de la Aplicación
+
+| Ruta | Componente | Protegida | Descripción |
+|------|-----------|-----------|-------------|
+| `/login` | `Login` | ❌ | Inicio de sesión |
+| `/` | `Dashboard` | ✅ | Página principal |
+| `/profile` | `Profile` | ✅ | Perfil de usuario |
+| `/tasks` | `Tasks` | ✅ | Gestión de tareas |
+
+---
+

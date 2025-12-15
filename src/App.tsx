@@ -36,7 +36,11 @@ const App: React.FC = () => {
       <Route path="/login" element={<Login />} />
       
       {/* Rutas Protegidas (Requieren login) */}
-      <Route path="/tasks" element={<PrivateRoute element={<Tasks />} />} />
+      <Route path="/tasks" element={<Tasks />} />
+      
+      {/* 2. ESTABLECER DASHBOARD COMO RUTA PRINCIPAL PROTEGIDA (/) */}
+      {/* Después del login exitoso, la navegación te lleva a / y carga Dashboard */}
+      <Route path="/" element={<PrivateRoute element={<Dashboard />} />} /> 
 
       {/* Ruta raíz: Carga el Dashboard si el usuario está autenticado */}
       <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
