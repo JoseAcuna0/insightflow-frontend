@@ -144,8 +144,10 @@ El proyecto estará disponible en: **http://localhost:5173**
 
 ### Paso 5: Probar Sistema Desplegado
 
-Simplemente debemos dirirnos a la pagina
+Simplemente debemos dirirnos a la pagina https://taller3-frontend-a6b6a.web.app/login
 
+Nota: si no la has iniciado antes, o durante un tiempo, al abrirla puede demorar un poco 
+mas de lo normal, una vez cargada funcionara con normalidad
 
 ## 📦 Tecnologías Utilizadas
 
