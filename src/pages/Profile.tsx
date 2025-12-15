@@ -2,33 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserService } from '../services/UserService';
-import { type User } from '../services/AuthService'; 
-import { type UserUpdateDto } from '../services/types/UserDto'; 
+import { type User } from '../services/AuthService';
+import { type UserUpdateDto } from '../services/types/UserDto';
 
+/**
+ * Componente de Perfil de Usuario.
+ * Permite visualizar la información completa de la cuenta, editar campos permitidos (username, nombre completo)
+ * y realizar acciones críticas como cerrar sesión o eliminar la cuenta.
+ */
 const Profile: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    // Estado para guardar el perfil completo obtenido por getUserById
+    // Almacena el objeto completo del usuario recuperado del backend
     const [profileData, setProfileData] = useState<User | null>(null);
     
-    // Estados para manejar los inputs de edición (inicializados al valor del perfil)
+    // Estados locales para el manejo de formularios (Inputs controlados)
     const [username, setUsername] = useState('');
     const [fullName, setFullName] = useState('');
     
-    // Estados de la UI
+    // Estados para el control de la interfaz de usuario (UI)
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
-    // Función que carga los datos del perfil y sincroniza los estados de edición
+    /**
+     * Obtiene los datos más recientes del servidor y sincroniza el formulario.
+     * Es crucial actualizar los estados 'username' y 'fullName' con la data recibida
+     * para que los inputs no aparezcan vacíos al cargar la página.
+     * * @param userId - ID del usuario a consultar.
+     */
     const fetchAndSyncProfile = async (userId: string) => {
         try {
             const data = await UserService.getUserById(userId);
             setProfileData(data);
             
-            // CRÍTICO: Inicializar los estados de edición con el valor actual del perfil.
+            // Sincronización de estados locales para edición
             setUsername(data.username);
             setFullName(data.fullName);
 
@@ -40,57 +50,47 @@ const Profile: React.FC = () => {
         }
     }
 
-    // ----------------------------------------------------
-    // EFECTO: Cargar el perfil completo al iniciar
-    // ----------------------------------------------------
+
     useEffect(() => {
         if (user) {
             fetchAndSyncProfile(user.id);
         }
     }, [user]);
     
-    // ----------------------------------------------------
-    // Lógica para VOLVER AL DASHBOARD
-    // ----------------------------------------------------
+
     const handleGoToDashboard = () => {
         navigate('/dashboard'); 
     };
 
-    // ----------------------------------------------------
-    // VERIFICACIÓN INICIAL 
-    // ----------------------------------------------------
+
     if (loading || !user || !profileData) { 
         return <p>Cargando información detallada del perfil...</p>;
     }
     
-    // ----------------------------------------------------
-    // Lógica para ACTUALIZAR el perfil (¡CORREGIDA PARA IGNORAR VALORES VACÍOS!)
-    // ----------------------------------------------------
+
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsUpdating(true);
         setMessage('');
         setError('');
 
-        // Prepara el objeto DTO solo si el valor del input es diferente al valor actual Y NO está vacío.
         const updateData: UserUpdateDto = {};
         
-        // --- LÓGICA CORREGIDA PARA ELIMINAR CADENAS VACÍAS ---
+        // Validación: Solo agregar al DTO si el valor ha cambiado y no está vacío.
         
-        // 1. Username
-        const newUsername = username.trim(); // Limpiamos espacios
+        // 1. Procesar Username
+        const newUsername = username.trim();
         if (newUsername !== profileData.username && newUsername !== '') {
             updateData.username = newUsername;
         }
 
-        // 2. Full Name
-        const newFullName = fullName.trim(); // Limpiamos espacios
+        // 2. Procesar Nombre Completo
+        const newFullName = fullName.trim();
         if (newFullName !== profileData.fullName && newFullName !== '') {
             updateData.fullName = newFullName;
         }
         
-        // --- FIN DE LA LÓGICA CORREGIDA ---
-
+        // Si no hay cambios válidos, abortar operación
         if (Object.keys(updateData).length === 0) {
             setMessage("No se detectaron cambios válidos.");
             setIsUpdating(false);
@@ -98,10 +98,10 @@ const Profile: React.FC = () => {
         }
 
         try {
-            // 1. Ejecuta la actualización (PATCH)
+            // 1. Enviar petición de actualización al Backend
             await UserService.updateUser(user.id, updateData); 
             
-            // 2. Vuelve a llamar al GET para obtener el objeto COMPLETO y SINCRO
+            // 2. Refrescar los datos locales para asegurar sincronía con la BD
             await fetchAndSyncProfile(user.id);
             
             setMessage("Perfil actualizado con éxito.");
@@ -116,16 +116,14 @@ const Profile: React.FC = () => {
         }
     };
 
-    // ----------------------------------------------------
-    // Lógica para ELIMINAR la cuenta
-    // ----------------------------------------------------
+
     const handleDelete = async () => {
         if (!window.confirm("¿Estás seguro de que quieres eliminar tu cuenta?")) return;
         
         try {
             await UserService.deleteUser(user.id);
-            logout(); 
-            navigate('/login'); 
+            logout(); // Limpia el contexto de autenticación
+            navigate('/login'); // Redirige fuera de la app
         } catch (err) {
              if (err instanceof Error) {
                  setError(`Fallo al eliminar: ${err.message}`);
@@ -135,13 +133,10 @@ const Profile: React.FC = () => {
         }
     }
 
-    // ----------------------------------------------------
-    // Renderizado
-    // ----------------------------------------------------
     return (
         <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', border: '1px solid #007bff', borderRadius: '8px' }}>
             
-            {/* === BOTÓN VOLVER AL DASHBOARD === */}
+            {/* Botón de navegación superior */}
             <button 
                 onClick={handleGoToDashboard} 
                 style={{ 
@@ -159,17 +154,16 @@ const Profile: React.FC = () => {
             
             <h2>Información de Perfil Detallada</h2>
             
-            {/* 1. DATOS MOSTRADOS (TODOS LOS DATOS, INCLUIDO USERNAME Y FULLNAME) */}
+            {/* Sección de Datos de Lectura (Read-Only) */}
             <div style={{ marginBottom: '20px', border: '1px solid #eee', padding: '15px' }}>
                 <h3>Datos del Usuario</h3>
                 
                 <p><strong>Username:</strong> {profileData.username}</p>
                 <p><strong>Nombre Completo:</strong> {profileData.fullName}</p>
-                
                 <p><strong>ID:</strong> {profileData.id}</p>
                 <p><strong>Email:</strong> {profileData.email}</p>
 
-                {/* === ESTADO DEL USUARIO === */}
+                {/* Indicador visual de estado */}
                 <p>
                     <strong>Estado del Usuario:</strong> 
                     <span style={{ color: profileData.userStatus ? 'green' : 'red', fontWeight: 'bold' }}>
@@ -177,7 +171,7 @@ const Profile: React.FC = () => {
                     </span>
                 </p>
 
-                {/* === FECHA DE NACIMIENTO === */}
+                {/* Formateo de fecha */}
                 <p>
                 <strong>Fecha de Nacimiento:</strong> 
                 {profileData.dateOfBirth && profileData.dateOfBirth.trim() !== '' 
@@ -190,35 +184,35 @@ const Profile: React.FC = () => {
 
             <hr />
 
-            {/* 2. Formulario de Actualización (Inputs usan Placeholder) */}
+            {/* Formulario de Edición */}
             <form onSubmit={handleUpdate} style={{ marginBottom: '20px' }}>
                 <h3>Editar Perfil (Solo Nombre y Usuario)</h3>
                 
-                {/* Campo Username */}
+                {/* Input: Username */}
                 <div style={{ marginBottom: '10px' }}>
                     <label>Username:</label>
                     <input 
                         type="text" 
                         onChange={(e) => setUsername(e.target.value)} 
                         disabled={isUpdating}
-                        placeholder={profileData.username} // Muestra el valor actual como guía
+                        placeholder={profileData.username} // Muestra valor actual como referencia
                     />
                 </div>
                 
-                {/* Campo Full Name */}
+                {/* Input: Full Name */}
                 <div style={{ marginBottom: '10px' }}>
                     <label>Nombre Completo:</label>
                     <input 
                         type="text" 
                         onChange={(e) => setFullName(e.target.value)} 
                         disabled={isUpdating}
-                        placeholder={profileData.fullName} // Muestra el valor actual como guía
+                        placeholder={profileData.fullName}
                     />
                 </div>
 
                 <button 
                     type="submit" 
-                    // Deshabilitar si está actualizando o si no hay cambios VÁLIDOS (vacío/sin cambiar)
+                    // Deshabilita si está cargando o si los campos son idénticos a los datos guardados
                     disabled={isUpdating || (username === profileData.username && fullName === profileData.fullName)} 
                     style={{ backgroundColor: '#007bff', color: 'white' }}
                 >
@@ -226,12 +220,13 @@ const Profile: React.FC = () => {
                 </button>
             </form>
             
+            {/* Mensajes de Feedback */}
             {message && <p style={{ color: 'green' }}>{message}</p>}
             {error && <p style={{ color: 'red' }}>Error: {error}</p>}
             
             <hr />
             
-            {/* 3. Botones de Acción */}
+            {/* Botones de Zona de Peligro */}
             <button onClick={handleDelete} style={{ marginRight: '10px', backgroundColor: 'red', color: 'white' }}>
                 Eliminar Cuenta
             </button>

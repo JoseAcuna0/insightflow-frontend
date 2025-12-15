@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "cross-env VITE_USERS_API_URL=https://taller3-backend-7kmc.onrender.com/api/users vite build",
+    "build": "cross-env VITE_USERS_API_URL=https://taller3-backend-7kmc.onrender.com/api/users VITE_DOCUMENTS_API_URL=https://taller-arqui-documents-service.onrender.com/api/documents vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
